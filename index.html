@@ -155,10 +155,7 @@ codeReader.reset();
 
 setStatus("sending");
 
-fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({barcode:code})
-})
+fetch(API_URL + "?barcode=" + encodeURIComponent(code))
 .then(r=>r.json())
 .then(data=>{
 setStatus(data.result,"success");
@@ -183,5 +180,6 @@ sending=false;
 </body>
 
 </html>
+
 
 
