@@ -1,115 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>wrhouse</title>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
-*{box-sizing:border-box;}
+
+*{
+box-sizing:border-box;
+}
 
 body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto;
-  background:#f2f4f7;
-  display:flex;
-  justify-content:center;
+margin:0;
+font-family:system-ui,-apple-system,Segoe UI,Roboto;
+background:#f2f4f7;
+display:flex;
+justify-content:center;
 }
 
 .container{
-  width:100%;
-  max-width:520px;
-  padding:20px;
+width:100%;
+max-width:520px;
+padding:20px;
 }
 
 .header{
-  font-size:26px;
-  font-weight:600;
-  margin-bottom:15px;
-  text-align:center;
+font-size:26px;
+font-weight:600;
+margin-bottom:15px;
 }
 
 .card{
-  background:white;
-  border-radius:22px;
-  padding:15px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.06);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-.video-wrapper{
-  width:100%;
-  border-radius:16px;
-  overflow:hidden;
-  background:#e5e7eb;
-  display:none; /* скрыто по умолчанию */
-  margin-bottom:10px;
+background:white;
+border-radius:22px;
+padding:15px;
+box-shadow:0 10px 25px rgba(0,0,0,0.06);
 }
 
 video{
-  width:100%;
-  display:block;
+width:100%;
+border-radius:16px;
+background:black;
 }
 
 .controls{
-  margin-top:10px;
-  display:flex;
-  gap:10px;
-  width:100%;
+margin-top:15px;
+display:flex;
+gap:10px;
 }
 
 button{
-  flex:1;
-  border:none;
-  border-radius:14px;
-  padding:16px;
-  font-size:18px;
-  font-weight:600;
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
+flex:1;
+border:none;
+border-radius:14px;
+padding:16px;
+font-size:18px;
+font-weight:600;
+background:#2563eb;
+color:white;
 }
 
 button:active{
-  transform:scale(0.97);
+transform:scale(0.97);
 }
 
 .status{
-  margin-top:12px;
-  font-size:15px;
-  color:#6b7280;
-  min-height:20px;
-  text-align:center;
+margin-top:12px;
+font-size:15px;
+color:#6b7280;
+min-height:20px;
 }
 
 .success{
-  color:#16a34a;
-  font-weight:600;
+color:#16a34a;
+font-weight:600;
 }
+
 </style>
+
 </head>
 
 <body>
+
 <div class="container">
-  <div class="header">wrhouse</div>
-  <div class="card">
 
-    <div class="video-wrapper" id="videoWrapper">
-      <video id="video"></video>
-    </div>
+<div class="header">wrhouse</div>
 
-    <div class="controls">
-      <button id="scanBtn" onclick="start()">Scan</button>
-    </div>
+<div class="card">
 
-    <div id="status" class="status">Готов</div>
-  </div>
+<video id="video"></video>
+
+<div class="controls">
+<button onclick="start()">Scan</button>
+</div>
+
+<div id="status" class="status"></div>
+
+</div>
+
 </div>
 
 <script>
+
 const API_URL="https://script.google.com/macros/s/AKfycbytq1RDOgxrzSh8H8RxAkngz673P1gS7qAJi3SZR2CZxZ0TZm8xC6Ou9v-w1oXFJYf_EQ/exec";
 
 let codeReader;
@@ -118,64 +113,70 @@ let count=0;
 let scanning=false;
 let sending=false;
 
-const videoWrapper=document.getElementById("videoWrapper");
-const scanBtn=document.getElementById("scanBtn");
-const statusEl=document.getElementById("status");
-
 function setStatus(text,cls=""){
-  statusEl.className="status "+cls;
-  statusEl.innerText=text;
+const el=document.getElementById("status");
+el.className="status "+cls;
+el.innerText=text;
 }
 
-async function start(){
-  if(scanning || sending) return;
+function start(){
 
-  scanning=true;
-  last="";
-  count=0;
-  setStatus("scan");
+if(scanning || sending) return;
 
-  // показать видео
-  videoWrapper.style.display="block";
+scanning=true;
+last="";
+count=0;
 
-  codeReader=new ZXing.BrowserMultiFormatReader();
-  codeReader.decodeFromVideoDevice(null,"video",async (result,err)=>{
-    if(!scanning) return;
+setStatus("scan");
 
-    if(result){
-      const code=result.text;
+codeReader=new ZXing.BrowserMultiFormatReader();
 
-      if(code===last){ count++; } else { last=code; count=1; }
+codeReader.decodeFromVideoDevice(null,"video",(result,err)=>{
 
-      if(count>=2){
-        scanning=false;
-        sending=true;
+if(!scanning) return;
 
-        // остановить камеру
-        codeReader.reset();
-        videoWrapper.style.display="none"; // скрыть видео после скана
+if(result){
 
-        setStatus("sending");
+const code=result.text;
 
-        try{
-          // используем POST с JSON, как раньше
-          const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ barcode: code })
-          });
-          const data = await res.json();
-          setStatus(data.result,"success");
-        }catch(e){
-          setStatus("error");
-        }finally{
-          sending=false;
-        }
-      }
-    }
-  });
+if(code===last){
+count++;
+}else{
+last=code;
+count=1;
 }
+
+if(count>=2){
+
+scanning=false;
+sending=true;
+
+codeReader.reset();
+
+setStatus("sending");
+
+fetch(API_URL + "?barcode=" + encodeURIComponent(code))
+.then(r=>r.json())
+.then(data=>{
+setStatus(data.result,"success");
+})
+.catch(()=>{
+setStatus("error");
+})
+.finally(()=>{
+sending=false;
+});
+
+}
+
+}
+
+});
+
+}
+
 </script>
-</body>
-</html>
 
+</body>
+
+</html>
