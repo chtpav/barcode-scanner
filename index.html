@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Scanner</title>
+
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
+<style>
+
+body{
+font-family:system-ui;
+text-align:center;
+background:#f5f6f8;
+margin:0;
+padding:20px;
+}
+
+video{
+width:100%;
+max-width:500px;
+border-radius:20px;
+background:black;
+}
+
+button{
+margin-top:20px;
+font-size:22px;
+padding:15px 30px;
+border:none;
+border-radius:15px;
+background:#2563eb;
+color:white;
+}
+
+#status{
+margin-top:20px;
+font-size:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Сканер EAN-13</h2>
+
+<video id="video"></video>
+
+<br>
+
+<button onclick="start()">Начать сканирование</button>
+
+<div id="status">Готов</div>
+
+<script>
+
+const API_URL="https://script.google.com/macros/s/AKfycbytq1RDOgxrzSh8H8RxAkngz673P1gS7qAJi3SZR2CZxZ0TZm8xC6Ou9v-w1oXFJYf_EQ/exec";
+
+let codeReader;
+let last="";
+let count=0;
+
+function start(){
+
+document.getElementById("status").innerText="Запуск камеры";
+
+codeReader=new ZXing.BrowserMultiFormatReader();
+
+codeReader.decodeFromVideoDevice(null,"video",(result,err)=>{
+
+if(result){
+
+const code=result.text;
+
+if(code===last){
+count++;
+}else{
+last=code;
+count=1;
+}
+
+if(count>=2){
+
+codeReader.reset();
+
+document.getElementById("status").innerText="Отправка";
+
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({barcode:code})
+})
+.then(r=>r.json())
+.then(data=>{
+document.getElementById("status").innerText=data.result;
+});
+
+}
+
+}
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
