@@ -111,15 +111,15 @@ button:active{
 
 <script>
 let codeReader;
-let last="";
-let count=0;
-let scanning=false;
-let sending=false;
+let last = "";
+let count = 0;
+let scanning = false;
+let sending = false;
 
 const videoWrapper = document.getElementById("videoWrapper");
 const statusEl = document.getElementById("status");
 
-function setStatus(text, cls=""){
+function setStatus(text, cls="") {
   statusEl.className = "status " + cls;
   statusEl.innerText = text;
 }
@@ -133,7 +133,13 @@ function start() {
   setStatus("scan");
   videoWrapper.style.display = "block";
 
+  // Если старый reader существует, сбрасываем
+  if (codeReader) {
+    codeReader.reset();
+  }
+
   codeReader = new ZXing.BrowserMultiFormatReader();
+
   codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
     if (!scanning) return;
 
@@ -146,28 +152,27 @@ function start() {
         scanning = false;
         sending = true;
 
-        codeReader.reset();
-        videoWrapper.style.display = "none";
-
         setStatus("sending");
 
-        // Важно: google.script.run работает только через HtmlService
+        // Остановить камеру
+        codeReader.reset();
+
         google.script.run
           .withSuccessHandler(res => {
             setStatus(res, "success");
             sending = false;
+            videoWrapper.style.display = "none"; // скрываем видео после успешного скана
           })
           .withFailureHandler(() => {
             setStatus("Ошибка при отправке");
             sending = false;
+            videoWrapper.style.display = "none"; // тоже скрываем видео
           })
           .addByBarcode(code);
       }
     }
   });
 }
-}
 </script>
 </body>
 </html>
-
