@@ -124,26 +124,25 @@ function setStatus(text, cls=""){
   statusEl.innerText = text;
 }
 
-function start(){
-  if(scanning || sending) return;
+function start() {
+  if (scanning || sending) return;
 
   scanning = true;
   last = "";
   count = 0;
-
   setStatus("scan");
   videoWrapper.style.display = "block";
 
   codeReader = new ZXing.BrowserMultiFormatReader();
   codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
-    if(!scanning) return;
+    if (!scanning) return;
 
-    if(result){
+    if (result) {
       const code = result.text;
 
-      if(code === last){ count++; } else { last = code; count = 1; }
+      if (code === last) count++; else { last = code; count = 1; }
 
-      if(count >= 2){
+      if (count >= 2) {
         scanning = false;
         sending = true;
 
@@ -152,13 +151,14 @@ function start(){
 
         setStatus("sending");
 
+        // Важно: google.script.run работает только через HtmlService
         google.script.run
           .withSuccessHandler(res => {
             setStatus(res, "success");
             sending = false;
           })
           .withFailureHandler(() => {
-            setStatus("error");
+            setStatus("Ошибка при отправке");
             sending = false;
           })
           .addByBarcode(code);
@@ -166,6 +166,8 @@ function start(){
     }
   });
 }
+}
 </script>
 </body>
 </html>
+
