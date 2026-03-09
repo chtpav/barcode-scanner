@@ -110,6 +110,7 @@ const API_URL="https://script.google.com/macros/s/AKfycbytq1RDOgxrzSh8H8RxAkngz6
 let codeReader;
 let last="";
 let count=0;
+let scanning=false;
 
 function setStatus(text,cls=""){
 const el=document.getElementById("status");
@@ -119,11 +120,19 @@ el.innerText=text;
 
 function start(){
 
-setStatus("camera starting");
+if(scanning) return;
+
+scanning=true;
+last="";
+count=0;
+
+setStatus("scan");
 
 codeReader=new ZXing.BrowserMultiFormatReader();
 
 codeReader.decodeFromVideoDevice(null,"video",(result,err)=>{
+
+if(!scanning) return;
 
 if(result){
 
@@ -137,6 +146,8 @@ count=1;
 }
 
 if(count>=2){
+
+scanning=false;
 
 codeReader.reset();
 
