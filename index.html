@@ -45,7 +45,7 @@ body{
   border-radius:16px;
   overflow:hidden;
   background:#e5e7eb;
-  display:none; /* скрыто по умолчанию */
+  display:none;
   margin-bottom:10px;
 }
 
@@ -110,66 +110,58 @@ button:active{
 </div>
 
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbytq1RDOgxrzSh8H8RxAkngz673P1gS7qAJi3SZR2CZxZ0TZm8xC6Ou9v-w1oXFJYf_EQ/exec";
-
 let codeReader;
 let last="";
 let count=0;
 let scanning=false;
 let sending=false;
 
-const videoWrapper=document.getElementById("videoWrapper");
-const scanBtn=document.getElementById("scanBtn");
-const statusEl=document.getElementById("status");
+const videoWrapper = document.getElementById("videoWrapper");
+const statusEl = document.getElementById("status");
 
-function setStatus(text,cls=""){
-  statusEl.className="status "+cls;
-  statusEl.innerText=text;
+function setStatus(text, cls=""){
+  statusEl.className = "status " + cls;
+  statusEl.innerText = text;
 }
 
-async function start(){
+function start(){
   if(scanning || sending) return;
 
-  scanning=true;
-  last="";
-  count=0;
+  scanning = true;
+  last = "";
+  count = 0;
+
   setStatus("scan");
+  videoWrapper.style.display = "block";
 
-  // показать видео
-  videoWrapper.style.display="block";
-
-  codeReader=new ZXing.BrowserMultiFormatReader();
-  codeReader.decodeFromVideoDevice(null,"video",async (result,err)=>{
+  codeReader = new ZXing.BrowserMultiFormatReader();
+  codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
     if(!scanning) return;
 
     if(result){
-      const code=result.text;
+      const code = result.text;
 
-      if(code===last){ count++; } else { last=code; count=1; }
+      if(code === last){ count++; } else { last = code; count = 1; }
 
-      if(count>=2){
-        scanning=false;
-        sending=true;
+      if(count >= 2){
+        scanning = false;
+        sending = true;
 
-        // остановить камеру
         codeReader.reset();
-        videoWrapper.style.display="none"; // скрыть видео после скана
+        videoWrapper.style.display = "none";
 
         setStatus("sending");
 
-        try{
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ barcode: code })
-  });
-  const text = await res.text(); // <-- читаем как текст
-  setStatus(text,"success");
-}catch(e){
-  setStatus("error");
-}finally{
-  sending=false;
-}
+        google.script.run
+          .withSuccessHandler(res => {
+            setStatus(res, "success");
+            sending = false;
+          })
+          .withFailureHandler(() => {
+            setStatus("error");
+            sending = false;
+          })
+          .addByBarcode(code);
       }
     }
   });
