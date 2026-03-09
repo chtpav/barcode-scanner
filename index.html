@@ -157,7 +157,6 @@ setStatus("sending");
 
 fetch(API_URL,{
 method:"POST",
-headers:{ "Content-Type":"application/json"},
 body:JSON.stringify({barcode:code})
 })
 .then(r=>r.json())
@@ -165,7 +164,7 @@ body:JSON.stringify({barcode:code})
 setStatus(data.result,"success");
 })
 .catch(()=>{
-setStatus("network error");
+setStatus("error");
 })
 .finally(()=>{
 sending=false;
@@ -184,4 +183,5 @@ sending=false;
 </body>
 
 </html>
+
 
