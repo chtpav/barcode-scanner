@@ -111,6 +111,7 @@ let codeReader;
 let last="";
 let count=0;
 let scanning=false;
+let sending=false;
 
 function setStatus(text,cls=""){
 const el=document.getElementById("status");
@@ -120,7 +121,7 @@ el.innerText=text;
 
 function start(){
 
-if(scanning) return;
+if(scanning || sending) return;
 
 scanning=true;
 last="";
@@ -148,6 +149,7 @@ count=1;
 if(count>=2){
 
 scanning=false;
+sending=true;
 
 codeReader.reset();
 
@@ -155,11 +157,18 @@ setStatus("sending");
 
 fetch(API_URL,{
 method:"POST",
+headers:{ "Content-Type":"application/json"},
 body:JSON.stringify({barcode:code})
 })
 .then(r=>r.json())
 .then(data=>{
 setStatus(data.result,"success");
+})
+.catch(()=>{
+setStatus("network error");
+})
+.finally(()=>{
+sending=false;
 });
 
 }
@@ -175,3 +184,4 @@ setStatus(data.result,"success");
 </body>
 
 </html>
+
