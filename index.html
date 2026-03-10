@@ -94,85 +94,102 @@ button:active{
 
 <body>
 <div class="container">
-  <div class="header">wrhouse</div>
-  <div class="card">
+<div class="header">wrhouse</div>
 
-    <div class="video-wrapper" id="videoWrapper">
-      <video id="video"></video>
-    </div>
+<div class="card">
 
-    <div class="controls">
-      <button id="scanBtn" onclick="start()">Scan</button>
-    </div>
+<div class="video-wrapper" id="videoWrapper">
+<video id="video"></video>
+</div>
 
-    <div id="status" class="status">Готов</div>
-  </div>
+<div class="controls">
+<button onclick="start()">Scan</button>
+</div>
+
+<div id="status" class="status">Готов</div>
+
+</div>
 </div>
 
 <script>
+
+const API="https://script.google.com/macros/s/AKfycbytq1RDOgxrzSh8H8RxAkngz673P1gS7qAJi3SZR2CZxZ0TZm8xC6Ou9v-w1oXFJYf_EQ/exec";
+
 let codeReader;
-let last = "";
-let count = 0;
-let scanning = false;
-let sending = false;
+let last="";
+let count=0;
+let scanning=false;
+let sending=false;
 
-const videoWrapper = document.getElementById("videoWrapper");
-const statusEl = document.getElementById("status");
+const videoWrapper=document.getElementById("videoWrapper");
+const statusEl=document.getElementById("status");
 
-function setStatus(text, cls="") {
-  statusEl.className = "status " + cls;
-  statusEl.innerText = text;
+function setStatus(t,c=""){
+statusEl.className="status "+c;
+statusEl.innerText=t;
 }
 
-function start() {
-  if (scanning || sending) return;
+function start(){
 
-  scanning = true;
-  last = "";
-  count = 0;
-  setStatus("scan");
-  videoWrapper.style.display = "block";
+if(scanning||sending)return;
 
-  // Если старый reader существует, сбрасываем
-  if (codeReader) {
-    codeReader.reset();
-  }
+scanning=true;
+last="";
+count=0;
 
-  codeReader = new ZXing.BrowserMultiFormatReader();
+setStatus("scan");
 
-  codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
-    if (!scanning) return;
+videoWrapper.style.display="block";
 
-    if (result) {
-      const code = result.text;
+if(codeReader)codeReader.reset();
 
-      if (code === last) count++; else { last = code; count = 1; }
+codeReader=new ZXing.BrowserMultiFormatReader();
 
-      if (count >= 2) {
-        scanning = false;
-        sending = true;
+codeReader.decodeFromVideoDevice(null,"video",(result,err)=>{
 
-        setStatus("sending");
+if(!scanning)return;
 
-        // Остановить камеру
-        codeReader.reset();
+if(result){
 
-        google.script.run
-          .withSuccessHandler(res => {
-            setStatus(res, "success");
-            sending = false;
-            videoWrapper.style.display = "none"; // скрываем видео после успешного скана
-          })
-          .withFailureHandler(() => {
-            setStatus("Ошибка при отправке");
-            sending = false;
-            videoWrapper.style.display = "none"; // тоже скрываем видео
-          })
-          .addByBarcode(code);
-      }
-    }
-  });
+const code=result.text;
+
+if(code===last)count++;
+else{
+last=code;
+count=1;
 }
+
+if(count>=2){
+
+scanning=false;
+sending=true;
+
+setStatus("sending");
+
+codeReader.reset();
+
+fetch(API+"?barcode="+encodeURIComponent(code))
+.then(r=>r.text())
+.then(res=>{
+setStatus(res||"+1","success");
+})
+.catch(()=>{
+setStatus("error");
+})
+.finally(()=>{
+sending=false;
+videoWrapper.style.display="none";
+});
+
+}
+
+}
+
+});
+
+}
+
 </script>
+
 </body>
 </html>
