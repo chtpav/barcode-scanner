@@ -1,184 +1,101 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>wrhouse</title>
+
+<title>Scanner</title>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
-*{box-sizing:border-box;}
 
 body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto;
-  background:#f2f4f7;
-  display:flex;
-  justify-content:center;
-}
-
-.container{
-  width:100%;
-  max-width:520px;
-  padding:20px;
-}
-
-.header{
-  font-size:26px;
-  font-weight:600;
-  margin-bottom:15px;
-  text-align:center;
-}
-
-.card{
-  background:white;
-  border-radius:22px;
-  padding:15px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.06);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-.video-wrapper{
-  width:100%;
-  border-radius:16px;
-  overflow:hidden;
-  background:#e5e7eb;
-  display:none;
-  margin-bottom:10px;
+font-family:system-ui;
+text-align:center;
+background:#f5f6f8;
+margin:0;
+padding:20px;
 }
 
 video{
-  width:100%;
-  display:block;
-}
-
-.controls{
-  margin-top:10px;
-  display:flex;
-  gap:10px;
-  width:100%;
+width:100%;
+max-width:500px;
+border-radius:20px;
+background:black;
 }
 
 button{
-  flex:1;
-  border:none;
-  border-radius:14px;
-  padding:16px;
-  font-size:18px;
-  font-weight:600;
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
+margin-top:20px;
+font-size:22px;
+padding:15px 30px;
+border:none;
+border-radius:15px;
+background:#2563eb;
+color:white;
 }
 
-button:active{
-  transform:scale(0.97);
+#status{
+margin-top:20px;
+font-size:20px;
 }
 
-.status{
-  margin-top:12px;
-  font-size:15px;
-  color:#6b7280;
-  min-height:20px;
-  text-align:center;
-}
-
-.success{
-  color:#16a34a;
-  font-weight:600;
-}
 </style>
+
 </head>
 
 <body>
-<div class="container">
-<div class="header">wrhouse</div>
 
-<div class="card">
+<h2>Сканер EAN-13</h2>
 
-<div class="video-wrapper" id="videoWrapper">
 <video id="video"></video>
-</div>
 
-<div class="controls">
-<button onclick="start()">Scan</button>
-</div>
+<br>
 
-<div id="status" class="status">Готов</div>
+<button onclick="start()">Начать сканирование</button>
 
-</div>
-</div>
+<div id="status">Готов</div>
 
 <script>
 
-const API="https://script.google.com/macros/s/AKfycbytq1RDOgxrzSh8H8RxAkngz673P1gS7qAJi3SZR2CZxZ0TZm8xC6Ou9v-w1oXFJYf_EQ/exec";
+const API_URL="https://script.google.com/macros/s/AKfycbxDreWhS7-PgExvHb2543HWSKcPSyFc4q3XNquhwkK6kpuHJEG1h8junCMlYIEax_OL7Q/exec";
 
 let codeReader;
 let last="";
 let count=0;
-let scanning=false;
-let sending=false;
-
-const videoWrapper=document.getElementById("videoWrapper");
-const statusEl=document.getElementById("status");
-
-function setStatus(t,c=""){
-statusEl.className="status "+c;
-statusEl.innerText=t;
-}
 
 function start(){
 
-if(scanning||sending)return;
-
-scanning=true;
-last="";
-count=0;
-
-setStatus("scan");
-
-videoWrapper.style.display="block";
-
-if(codeReader)codeReader.reset();
+document.getElementById("status").innerText="Запуск камеры";
 
 codeReader=new ZXing.BrowserMultiFormatReader();
 
 codeReader.decodeFromVideoDevice(null,"video",(result,err)=>{
 
-if(!scanning)return;
-
 if(result){
 
 const code=result.text;
 
-if(code===last)count++;
-else{
+if(code===last){
+count++;
+}else{
 last=code;
 count=1;
 }
 
 if(count>=2){
 
-scanning=false;
-sending=true;
-
-setStatus("sending");
-
 codeReader.reset();
 
-fetch(API+"?barcode="+encodeURIComponent(code))
-.then(r=>r.text())
-.then(res=>{
-setStatus(res||"+1","success");
+document.getElementById("status").innerText="Отправка";
+
+fetch(API_URL,{
+method:"POST",
+body:JSON.stringify({barcode:code})
 })
-.catch(()=>{
-setStatus("error");
-})
-.finally(()=>{
-sending=false;
-videoWrapper.style.display="none";
+.then(r=>r.json())
+.then(data=>{
+document.getElementById("status").innerText=data.result;
 });
 
 }
