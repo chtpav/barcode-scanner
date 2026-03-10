@@ -4,7 +4,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>wrhouse</title>
+<title>scan – wrhouse</title>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
@@ -108,10 +108,10 @@ font-weight:600;
 </div>
 
 <div class="controls">
-<button onclick="start()">Scan</button>
+<button onclick="start()">scan</button>
 </div>
 
-<div id="status" class="status">Готов</div>
+<div id="status" class="status">готов</div>
 
 </div>
 
@@ -135,11 +135,19 @@ function start(){
 
 document.getElementById("videoWrapper").style.display="block";
 
-setStatus("Запуск камеры");
+setStatus("запуск камеры");
 
 codeReader=new ZXing.BrowserMultiFormatReader();
 
-codeReader.decodeFromVideoDevice(null,"video",(result,err)=>{
+codeReader.decodeFromConstraints(
+{
+video:{
+facingMode:"environment",
+frameRate:{ideal:15,max:20}
+}
+},
+"video",
+(result,err)=>{
 
 if(result){
 
@@ -158,7 +166,7 @@ codeReader.reset();
 
 document.getElementById("videoWrapper").style.display="none";
 
-setStatus("Отправка");
+setStatus("отправка");
 
 fetch(API_URL,{
 method:"POST",
