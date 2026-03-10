@@ -1,195 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>scan – wrhouse</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- ZXing библиотека для сканирования -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-<title>scan – wrhouse</title>
+  <!-- Подключение стилей -->
+  <link rel="stylesheet" href="style.css">
 
-<script src="https://unpkg.com/@zxing/library@latest"></script>
-
-<style>
-
-*{box-sizing:border-box}
-
-body{
-margin:0;
-font-family:system-ui,-apple-system,Segoe UI,Roboto;
-background:#f2f4f7;
-display:flex;
-justify-content:center;
-}
-
-.container{
-width:100%;
-max-width:520px;
-padding:20px;
-}
-
-.header{
-font-size:26px;
-font-weight:600;
-margin-bottom:15px;
-text-align:center;
-}
-
-.card{
-background:white;
-border-radius:22px;
-padding:15px;
-box-shadow:0 10px 25px rgba(0,0,0,0.06);
-display:flex;
-flex-direction:column;
-align-items:center;
-}
-
-.video-wrapper{
-width:100%;
-border-radius:16px;
-overflow:hidden;
-background:#e5e7eb;
-display:none;
-margin-bottom:10px;
-}
-
-video{
-width:100%;
-display:block;
-}
-
-.controls{
-margin-top:10px;
-width:100%;
-}
-
-button{
-width:100%;
-border:none;
-border-radius:14px;
-padding:16px;
-font-size:18px;
-font-weight:600;
-background:#2563eb;
-color:white;
-cursor:pointer;
-}
-
-button:active{
-transform:scale(0.97);
-}
-
-.status{
-margin-top:12px;
-font-size:15px;
-color:#6b7280;
-min-height:20px;
-text-align:center;
-}
-
-.success{
-color:#16a34a;
-font-weight:600;
-}
-
-</style>
-
+  <!-- Подключение скрипта -->
+  <script defer src="script.js"></script>
 </head>
 
 <body>
 
-<div class="container">
+  <!-- ====== Контейнер приложения ====== -->
+  <div class="container">
 
-<div class="header">wrhouse</div>
+    <!-- ====== Заголовок ====== -->
+    <div class="header">wrhouse</div>
 
-<div class="card">
+    <!-- ====== Карточка со сканером ====== -->
+    <div class="card">
 
-<div class="video-wrapper" id="videoWrapper">
-<video id="video"></video>
-</div>
+      <!-- Видео с камерой -->
+      <div class="video-wrapper" id="videoWrapper">
+        <video id="video"></video>
+      </div>
 
-<div class="controls">
-<button onclick="start()">scan</button>
-</div>
+      <!-- Кнопка управления сканированием -->
+      <div class="controls">
+        <button id="scanBtn">scan</button>
+      </div>
 
-<div id="status" class="status">готов</div>
+      <!-- Статус сканирования -->
+      <div id="status" class="status">готов</div>
 
-</div>
+    </div>
 
-</div>
-
-<script>
-
-const API_URL="https://script.google.com/macros/s/AKfycbxDreWhS7-PgExvHb2543HWSKcPSyFc4q3XNquhwkK6kpuHJEG1h8junCMlYIEax_OL7Q/exec";
-
-let codeReader;
-let last="";
-let count=0;
-
-function setStatus(text,cls=""){
-const el=document.getElementById("status");
-el.className="status "+cls;
-el.innerText=text;
-}
-
-function start(){
-
-document.getElementById("videoWrapper").style.display="block";
-
-setStatus("запуск камеры");
-
-codeReader=new ZXing.BrowserMultiFormatReader();
-
-codeReader.decodeFromConstraints(
-{
-video:{
-facingMode:"environment",
-frameRate:{ideal:15,max:20}
-}
-},
-"video",
-(result,err)=>{
-
-if(result){
-
-const code=result.text;
-
-if(code===last){
-count++;
-}else{
-last=code;
-count=1;
-}
-
-if(count>=2){
-
-codeReader.reset();
-
-document.getElementById("videoWrapper").style.display="none";
-
-setStatus("отправка");
-
-fetch(API_URL,{
-  method:"POST",
-  body:JSON.stringify({barcode:code})
-})
-.then(r=>r.json())
-.then(data=>{
-  setStatus(data.result,"success");
-})
-.catch(()=>{
-  setStatus("Ошибка сети");
-});
-
-}
-
-}
-
-});
-
-}
-
-</script>
+  </div>
 
 </body>
 </html>
-
