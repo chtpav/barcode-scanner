@@ -4,40 +4,91 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Scanner</title>
+<title>wrhouse</title>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
 
+*{box-sizing:border-box}
+
 body{
-font-family:system-ui;
-text-align:center;
-background:#f5f6f8;
 margin:0;
+font-family:system-ui,-apple-system,Segoe UI,Roboto;
+background:#f2f4f7;
+display:flex;
+justify-content:center;
+}
+
+.container{
+width:100%;
+max-width:520px;
 padding:20px;
+}
+
+.header{
+font-size:26px;
+font-weight:600;
+margin-bottom:15px;
+text-align:center;
+}
+
+.card{
+background:white;
+border-radius:22px;
+padding:15px;
+box-shadow:0 10px 25px rgba(0,0,0,0.06);
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.video-wrapper{
+width:100%;
+border-radius:16px;
+overflow:hidden;
+background:#e5e7eb;
+display:none;
+margin-bottom:10px;
 }
 
 video{
 width:100%;
-max-width:500px;
-border-radius:20px;
-background:black;
+display:block;
+}
+
+.controls{
+margin-top:10px;
+width:100%;
 }
 
 button{
-margin-top:20px;
-font-size:22px;
-padding:15px 30px;
+width:100%;
 border:none;
-border-radius:15px;
+border-radius:14px;
+padding:16px;
+font-size:18px;
+font-weight:600;
 background:#2563eb;
 color:white;
+cursor:pointer;
 }
 
-#status{
-margin-top:20px;
-font-size:20px;
+button:active{
+transform:scale(0.97);
+}
+
+.status{
+margin-top:12px;
+font-size:15px;
+color:#6b7280;
+min-height:20px;
+text-align:center;
+}
+
+.success{
+color:#16a34a;
+font-weight:600;
 }
 
 </style>
@@ -46,15 +97,25 @@ font-size:20px;
 
 <body>
 
-<h2>Сканер EAN-13</h2>
+<div class="container">
 
+<div class="header">wrhouse</div>
+
+<div class="card">
+
+<div class="video-wrapper" id="videoWrapper">
 <video id="video"></video>
+</div>
 
-<br>
+<div class="controls">
+<button onclick="start()">Scan</button>
+</div>
 
-<button onclick="start()">Начать сканирование</button>
+<div id="status" class="status">Готов</div>
 
-<div id="status">Готов</div>
+</div>
+
+</div>
 
 <script>
 
@@ -64,9 +125,17 @@ let codeReader;
 let last="";
 let count=0;
 
+function setStatus(text,cls=""){
+const el=document.getElementById("status");
+el.className="status "+cls;
+el.innerText=text;
+}
+
 function start(){
 
-document.getElementById("status").innerText="Запуск камеры";
+document.getElementById("videoWrapper").style.display="block";
+
+setStatus("Запуск камеры");
 
 codeReader=new ZXing.BrowserMultiFormatReader();
 
@@ -87,7 +156,7 @@ if(count>=2){
 
 codeReader.reset();
 
-document.getElementById("status").innerText="Отправка";
+setStatus("Отправка");
 
 fetch(API_URL,{
 method:"POST",
@@ -95,7 +164,7 @@ body:JSON.stringify({barcode:code})
 })
 .then(r=>r.json())
 .then(data=>{
-document.getElementById("status").innerText=data.result;
+setStatus(data.result,"success");
 });
 
 }
