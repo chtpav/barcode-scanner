@@ -169,12 +169,15 @@ document.getElementById("videoWrapper").style.display="none";
 setStatus("отправка");
 
 fetch(API_URL,{
-method:"POST",
-body:JSON.stringify({barcode:code})
+  method:"POST",
+  body:JSON.stringify({barcode:code})
 })
 .then(r=>r.json())
 .then(data=>{
-setStatus(data.result,"success");
+  setStatus(data.result,"success");
+})
+.catch(()=>{
+  setStatus("Ошибка сети");
 });
 
 }
@@ -189,3 +192,4 @@ setStatus(data.result,"success");
 
 </body>
 </html>
+
